@@ -84,29 +84,37 @@ async function main() {
   await Promise.all(tasks);
 }
 
+function isRelativeNonParentImport(path: string | undefined): boolean {
+  return !!path && path[0] === "." && path[1] !== ".";
+}
+
 const importPlugin: () => babel.PluginObj = () => {
   return {
     visitor: {
       ImportDeclaration(path) {
-        if (!path.node.source.value.startsWith(".")) {
+        const nodeValue = path.node.source.value;
+        if (!isRelativeNonParentImport(nodeValue)) {
           return;
         }
         // Relative imports should also point to their linked variants.
-        path.node.source.value = `${path.node.source.value}.linked.mjs`;
+        path.node.source.value = `${nodeValue}.linked.mjs`;
       },
       ExportNamedDeclaration(path) {
-        if (!path.node.source || !path.node.source.value.startsWith(".")) {
+        const nodeValue = path.node.source.value;
+        if (!isRelativeNonParentImport(nodeValue)) {
           return;
         }
+
         // Relative exports should also point to their linked variants.
-        path.node.source.value = `${path.node.source.value}.linked.mjs`;
+        path.node.source.value = `${nodeValue}.linked.mjs`;
       },
       ExportAllDeclaration(path) {
-        if (!path.node.source.value.startsWith(".")) {
+        const nodeValue = path.node.source.value;
+        if (!isRelativeNonParentImport(nodeValue)) {
           return;
         }
         // Relative exports should also point to their linked variants.
-        path.node.source.value = `${path.node.source.value}.linked.mjs`;
+        path.node.source.value = `${nodeValue}.linked.mjs`;
       },
     },
   };
